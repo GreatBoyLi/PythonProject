@@ -22,6 +22,26 @@ data_iter = load_array((features, labels), batch_size)
 # nn是神经网络的缩写
 net = nn.Sequential(nn.Linear(2, 1))
 
+# 初始化W和b的值
 net[0].weight.data.normal_(0, 0.01)
 net[0].bias.data.fill_(0)
-print(net)
+
+# 均方误差
+loss = nn.MSELoss()
+
+# 随机梯度下降算法
+trainer = torch.optim.SGD(net.parameters(), lr=0.03)
+
+# 迭代3个周期
+num_epochs = 3
+for epoch in range(num_epochs):
+    for X, y in data_iter:
+        l = loss(net(X), y)
+        trainer.zero_grad()
+        l.backward()
+        trainer.step()
+    l = loss(net(features), labels)
+    print(f'epoch {epoch + 1}, loss {l:f}')
+
+print(f'w的估计误差：{true_w - net[0].weight}')
+print(f'b的估计误差：{true_b - net[0].bias}')
