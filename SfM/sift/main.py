@@ -244,3 +244,6 @@ def computeHessianAtCenterPixel(pixel_array):
     return np.array([[dxx, dxy, dxs],
                      [dxy, dyy, dys],
                      [dxs, dys, dss]])
+
+
+    #test
