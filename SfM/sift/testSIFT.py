@@ -272,7 +272,8 @@ def computeGradientAtCenterPixel(pixel_array):
     # 求梯度
     # With step size h, the central difference formula of order O(h^2) for f'(x) is (f(x + h) - f(x - h)) / (2 * h)
     # Here h = 1, so the formula simplifies to f'(x) = (f(x + 1) - f(x - 1)) / 2
-    # NOTE: x corresponds to second array axis, y corresponds to first array axis, and s (scale) corresponds to third array axis
+    # NOTE: x corresponds to third array axis, y corresponds to second array axis, and s (scale) corresponds to first array axis
+    # x 是第三个轴，y是第二个轴，s是第一个轴
     dx = 0.5 * (pixel_array[1, 1, 2] - pixel_array[1, 1, 0])
     dy = 0.5 * (pixel_array[1, 2, 1] - pixel_array[1, 0, 1])
     ds = 0.5 * (pixel_array[2, 1, 1] - pixel_array[0, 1, 1])
@@ -284,13 +285,14 @@ def computeHessianAtCenterPixel(pixel_array):
     """
     # With step size h, the central difference formula of order O(h^2) for f''(x) is (f(x + h) - 2 * f(x) + f(x - h)) / (h ^ 2)
     # Here h = 1, so the formula simplifies to f''(x) = f(x + 1) - 2 * f(x) + f(x - 1)
-    # With step size h, the central difference formula of order O(h^2) for (d^2) f(x, y) / (dx dy) = (f(x + h, y + h) - f(x + h, y - h) - f(x - h, y + h) + f(x - h, y - h)) / (4 * h ^ 2)
-    # Here h = 1, so the formula simplifies to (d^2) f(x, y) / (dx dy) = (f(x + 1, y + 1) - f(x + 1, y - 1) - f(x - 1, y + 1) + f(x - 1, y - 1)) / 4
-    # NOTE: x corresponds to second array axis, y corresponds to first array axis, and s (scale) corresponds to third array axis
+    # NOTE: x corresponds to third array axis, y corresponds to second array axis, and s (scale) corresponds to first array axis
+    # x 是第三个轴，y是第二个轴，s是第一个轴
     center_pixel_value = pixel_array[1, 1, 1]
     dxx = pixel_array[1, 1, 2] - 2 * center_pixel_value + pixel_array[1, 1, 0]
     dyy = pixel_array[1, 2, 1] - 2 * center_pixel_value + pixel_array[1, 0, 1]
     dss = pixel_array[2, 1, 1] - 2 * center_pixel_value + pixel_array[0, 1, 1]
+    # With step size h, the central difference formula of order O(h^2) for (d^2) f(x, y) / (dx dy) = (f(x + h, y + h) - f(x + h, y - h) - f(x - h, y + h) + f(x - h, y - h)) / (4 * h ^ 2)
+    # Here h = 1, so the formula simplifies to (d^2) f(x, y) / (dx dy) = (f(x + 1, y + 1) - f(x + 1, y - 1) - f(x - 1, y + 1) + f(x - 1, y - 1)) / 4
     dxy = 0.25 * (pixel_array[1, 2, 2] - pixel_array[1, 2, 0] - pixel_array[1, 0, 2] + pixel_array[1, 0, 0])
     dxs = 0.25 * (pixel_array[2, 1, 2] - pixel_array[2, 1, 0] - pixel_array[0, 1, 2] + pixel_array[0, 1, 0])
     dys = 0.25 * (pixel_array[2, 2, 1] - pixel_array[2, 0, 1] - pixel_array[0, 2, 1] + pixel_array[0, 0, 1])
