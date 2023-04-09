@@ -246,5 +246,5 @@ def computeHessianAtCenterPixel(pixel_array):
                      [dxs, dys, dss]])
 
 
-    # test
+    #     test
     #test
