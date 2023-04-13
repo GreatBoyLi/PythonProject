@@ -8,3 +8,4 @@ cv2.imwrite("C:/Users/Great_Boy_Li/Desktop/1234.jpg", resize_img)
 
 
 # test from windows
+# test from Mac
