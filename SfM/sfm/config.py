@@ -1,7 +1,10 @@
 import numpy as np
 
 image_dir = '../Image/SceauxCastle'
-MRT = 0.7
+
+
+def getMRT():
+    return 0.7
 
 
 def getK():
