@@ -1,6 +1,6 @@
 import numpy as np
 
-image_dir = 'E:/3D_Reconstruction/ImageDataset_SceauxCastle-master/images'
+image_dir = '../Image/SceauxCastle'
 MRT = 0.7
 
 
