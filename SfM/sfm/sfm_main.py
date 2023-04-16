@@ -17,6 +17,10 @@ keypoints_all, descriptor_all, color_all = sfm_component.extract_features(image_
 # 获取图片两两对应的特征点匹配
 matches_all = sfm_component.match_all_features(descriptor_all)
 
-sfm_component.init_structure(K, keypoints_all, color_all, matches_all)
+struct, correspond_structIdx, colors, rotations, motions = \
+    sfm_component.init_structure(K, keypoints_all, color_all, matches_all)
+
+for i in range(1, len(matches_all)):
+    pass
 
 print("111111")
