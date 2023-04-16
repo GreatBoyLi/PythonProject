@@ -1,6 +1,9 @@
+import numpy as np
+
 import config
 import os
 import sfm_component
+import cv2
 
 
 image_dir = config.image_dir
@@ -21,6 +24,15 @@ struct, correspond_structIdx, colors, rotations, motions = \
     sfm_component.init_structure(K, keypoints_all, color_all, matches_all)
 
 for i in range(1, len(matches_all)):
-    pass
+    object_points, image_points = \
+        sfm_component.get_objpoints_and_imgpoints(matches_all[i], correspond_structIdx[i], struct, keypoints_all[i+1])
+    # 在python的opencv中solvePnpRansac函数的第一个码数长度要大于7，否则会报错
+    # 这里对小于7的点集做一个重复填充操作，即用点集中的第一个点补满7个
+    while len(image_points) < 7:
+        object_points = np.append(object_points, [object_points[0]], axis=0)
+        image_points = np.append(image_points, [image_points[0]], axis=0)
+
+    _, r, T, _ = cv2.solvePnPRansac(object_points, image_points, K, np.array([]))
+    R, _ = cv2.Rodrigues(r)
 
 print("111111")

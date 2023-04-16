@@ -134,12 +134,22 @@ def reconstruct(K, R1, T1, R2, T2, p1, p2):
     return np.array(structure, dtype=np.float32)
 
 
-def getObjpointsAndImgpoints(matches, structIndices, structure, keypoints):
+def get_objpoints_and_imgpoints(matches, struct_indices, structure, key_points):
     """
     制作图像点以及空间点
     :param matches:
-    :param structIndices:
+    :param struct_indices:
     :param structure:
-    :param keypoints:
+    :param key_points:
     :return:
     """
+    object_points =[]
+    image_points = []
+    for match in matches:
+        query_idx = match.queryIdx
+        train_idx = match.trainIdx
+        struct_idx = struct_indices[query_idx]
+        if struct_idx > 0:
+            object_points.append(structure[int(struct_idx)])
+            image_points.append(key_points[train_idx].pt)
+    return np.array(object_points), np.array(image_points)
