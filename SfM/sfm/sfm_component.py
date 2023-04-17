@@ -63,6 +63,38 @@ def match_features(query, train):
     return matches
 
 
+def getMatchedPoints(keyPoint1, keyPoint2, match):
+    """
+    获得匹配的SIFT特征点的x，y坐标
+    :param keyPoint1: 第一个SIFT特征的keyPoint列表
+    :param keyPoint2: 第二个SIFT特征的keyPoint列表
+    :param match: 两张图片SIFT特征匹配的数据
+    :return: 返回两张图片匹配的SIFT特征点的坐标
+    """
+    srcPts = []
+    dstPts = []
+    for m in match:
+        srcPts.append(keyPoint1[m.queryIdx].pt)
+        dstPts.append(keyPoint2[m.trainIdx].pt)
+    return np.array(srcPts), np.array(dstPts)
+
+
+def getMatchedColors(colorPoint1, colorPoint2, match):
+    """
+    获得匹配的SIFT点的color值
+    :param colorPoint1:
+    :param colorPoint2:
+    :param match:
+    :return:
+    """
+    srcColor = []
+    dstColor = []
+    for m in match:
+        srcColor.append(colorPoint1[m.queryIdx])
+        dstColor.append(colorPoint2[m.trainIdx])
+    return np.array(srcColor), np.array(dstColor)
+
+
 def init_structure(K, keypoints_all, color_all, matches_all):
     """
 
@@ -73,10 +105,8 @@ def init_structure(K, keypoints_all, color_all, matches_all):
     :return:
     """
     # 两张图片的特征点坐标
-    p1 = np.array([keypoints_all[0][m.queryIdx].pt for m in matches_all[0]])
-    p2 = np.array([keypoints_all[1][m.trainIdx].pt for m in matches_all[0]])
-    c1 = np.array([color_all[0][m.queryIdx] for m in matches_all[0]])
-    c2 = np.array([color_all[1][m.trainIdx] for m in matches_all[0]])
+    p1, p2 = getMatchedPoints(keypoints_all[0], keypoints_all[1], matches_all[0])
+    c1, c2 = getMatchedColors(color_all[0], color_all[1], matches_all[0])
 
     # 寻找两张图片之间对应相机旋转角度以及相机平移
     focal_length = K[0][0]
@@ -84,7 +114,7 @@ def init_structure(K, keypoints_all, color_all, matches_all):
     # 两种计算本质矩阵的方法都可以，计算的结果一样
     E, mask = cv2.findEssentialMat(p1, p2, focal_length, principle_point, cv2.RANSAC, 0.999, 1.0)
     # E1, mask1 = cv2.findEssentialMat(p1, p2, K, cv2.RANSAC, 0.999, 1.0, mask=None)
-    _, R, T, mask = cv2.recoverPose(E, p1, p2, K, mask=mask)
+    _, R, T, mask = cv2.recoverPose(E, p1, p2, K, mask)
     # 获得的mask不一样，数量也不一样，15号需要好好看看
     # 选择重合的点
     p1 = np.array([p1[i] for i in range(len(mask)) if mask[i] > 0])
@@ -153,3 +183,29 @@ def get_objpoints_and_imgpoints(matches, struct_indices, structure, key_points):
             object_points.append(structure[int(struct_idx)])
             image_points.append(key_points[train_idx].pt)
     return np.array(object_points), np.array(image_points)
+
+
+def fusionStructure(matches, structIndices, nextStructIndices, structure, nextStruct, colors, nextColors):
+    """
+    将已经作出的点云进行融合
+    :param matches: SIFT特征匹配的点
+    :param structIndices: 已经三角化的点以及顺序（大于0的下标是三角化的点，大于0的值也代表着点云的顺序）
+    :param nextStructIndices: 下一张图片三角化的点以及顺序
+    :param structure: 三角化点的集合
+    :param nextStruct: 下一张图片三角化点的集合
+    :param colors:
+    :param nextColors:
+    :return:
+    """
+    for i, match in enumerate(matches):
+        queryIdx = match.queryIdx
+        trainIdx = match.trainIdx
+        structIdx = structIndices[queryIdx]
+        if structIdx > 0:
+            nextStructIndices[trainIdx] = structIdx
+            continue
+        structure = np.append(structure, [nextStruct[i]], axis=0)
+        colors = np.append(colors, [nextColors[i]], axis=0)
+        structIndices[queryIdx] = nextStructIndices[trainIdx] = len(structure) - 1
+    return structIndices, nextStructIndices, structure, colors
+

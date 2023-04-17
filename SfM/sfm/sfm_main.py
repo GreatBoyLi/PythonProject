@@ -20,12 +20,12 @@ keypoints_all, descriptor_all, color_all = sfm_component.extract_features(image_
 # 获取图片两两对应的特征点匹配
 matches_all = sfm_component.match_all_features(descriptor_all)
 
-struct, correspond_structIdx, colors, rotations, motions = \
+structure, correspond_structIdx, colors, rotations, motions = \
     sfm_component.init_structure(K, keypoints_all, color_all, matches_all)
 
 for i in range(1, len(matches_all)):
     object_points, image_points = \
-        sfm_component.get_objpoints_and_imgpoints(matches_all[i], correspond_structIdx[i], struct, keypoints_all[i+1])
+        sfm_component.get_objpoints_and_imgpoints(matches_all[i], correspond_structIdx[i], structure, keypoints_all[i+1])
     # 在python的opencv中solvePnpRansac函数的第一个码数长度要大于7，否则会报错
     # 这里对小于7的点集做一个重复填充操作，即用点集中的第一个点补满7个
     while len(image_points) < 7:
@@ -34,5 +34,16 @@ for i in range(1, len(matches_all)):
 
     _, r, T, _ = cv2.solvePnPRansac(object_points, image_points, K, np.array([]))
     R, _ = cv2.Rodrigues(r)
+    rotations.append(R)
+    motions.append(T)
+    # 获得图片匹配特征点的keyPoint数据
+    print(i)
+    p1, p2 = sfm_component.getMatchedPoints(keypoints_all[i], keypoints_all[i+1], matches_all[i])
+    c1, c2 = sfm_component.getMatchedColors(color_all[i], color_all[i+1], matches_all[i])
+    # 三维重建下一对图片的
+    nextStructure = sfm_component.reconstruct(K, rotations[i], motions[i], R, T, p1, p2)
+    correspond_structIdx[i], correspond_structIdx[i+1], structure, colors = \
+        sfm_component.fusionStructure(matches_all[i], correspond_structIdx[i], correspond_structIdx[i+1],
+                                      structure, nextStructure, colors, c1)
 
 print("111111")
