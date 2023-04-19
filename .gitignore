@@ -1,5 +1,6 @@
 # Pycharm IDE
 /*/.idea/
+.DS_Store
 
 # Python 动态库
 *.pyc
