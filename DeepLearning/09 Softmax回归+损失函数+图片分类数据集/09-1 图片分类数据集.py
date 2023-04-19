@@ -4,7 +4,7 @@ from torch.utils import data
 from torchvision import transforms
 from d2l import torch as d2l
 
-d2l.use_svg_display()
+# d2l.use_svg_display()
 
 def get_fashion_mnist_labels(labels):
     """
@@ -47,7 +47,7 @@ def get_dataloader_workers():
     用4个进程读取数据
     :return:
     """
-    return 1
+    return 4
 
 
 def load_data_fashion_mnist(batch_size, resize=None):
@@ -75,25 +75,23 @@ def load_data_fashion_mnist(batch_size, resize=None):
                             num_workers=get_dataloader_workers()))
 
 
-# 通过ToTensor实例将图像数据从PIL类型变换成32位浮点数格式
-# 并除以255使得所有像素的数值均在0到1之间
-trans = transforms.ToTensor()
-mnist_train = torchvision.datasets.FashionMNIST(root="../data", train=True, transform=trans, download=True)
-mnist_test = torchvision.datasets.FashionMNIST(root="../data", train=False, transform=trans, download=True)
+if __name__ == '__main__':
 
-X, y = next(iter(data.DataLoader(mnist_train, batch_size=18)))
-show_images(X.reshape(18, 28, 28), 2, 9, titles=get_fashion_mnist_labels(y))
-d2l.plt.show()
+    # 通过ToTensor实例将图像数据从PIL类型变换成32位浮点数格式
+    # 并除以255使得所有像素的数值均在0到1之间
+    trans = transforms.ToTensor()
+    mnist_train = torchvision.datasets.FashionMNIST(root="../data", train=True, transform=trans, download=True)
+    mnist_test = torchvision.datasets.FashionMNIST(root="../data", train=False, transform=trans, download=True)
 
-batch_size = 256
+    X, y = next(iter(data.DataLoader(mnist_train, batch_size=18)))
+    show_images(X.reshape(18, 28, 28), 2, 9, titles=get_fashion_mnist_labels(y))
+    d2l.plt.show()
 
-train_iter = data.DataLoader(mnist_train, batch_size, shuffle=True, num_workers=get_dataloader_workers())
+    batch_size = 256
 
-timer = d2l.Timer()
-for X, y in train_iter:
-    continue
-print(f'{timer.stop():.2f} sec')
+    train_iter = data.DataLoader(mnist_train, batch_size, shuffle=True, num_workers=get_dataloader_workers())
 
-test1, test2 = load_data_fashion_mnist(batch_size)
-for a, b in test2:
-    print(a)
+    timer = d2l.Timer()
+    for X, y in train_iter:
+        continue
+    print(f'{timer.stop():.2f} sec')
