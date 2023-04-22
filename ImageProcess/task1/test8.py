@@ -44,7 +44,8 @@ angle = np.floor(np.angle(fft.ifft2(carrier_fft)) * 100000)
 # m = carrier_ifft_img * np.cos(angle) + carrier_ifft_img * np.sin(angle) * 1j
 m = carrier_ifft_img * np.cos(angle / 100000) + carrier_ifft_img * np.sin(angle / 100000) * 1j
 # carrier_fft2 = fft.fft2(test1)
-carrier_fft2 = fft.fft2(fft.ifft2(carrier_fft))
+a = fft.ifft2(carrier_fft)
+carrier_fft2 = fft.fft2(a)
 
 anylize = carrier_fft / carrier_fft2
 
@@ -87,7 +88,7 @@ __proto_image[0: 128, 384: 512] = carrier_fft2[0: 128, 384: 512]
 __proto_image[384: 512, 384: 512] = carrier_fft2[384: 512, 384: 512]
 
 
-fig, axes = plt.subplots(4, 2)
+fig, axes = plt.subplots(2, 2)
 axe = axes.ravel()
 
 a0 = fft.ifft2(__proto_image)
@@ -101,16 +102,25 @@ axe2 = np.ceil(np.abs(a2)).astype(int)
 axe3 = np.ceil(np.abs(a3)).astype(int)
 
 
-axe[0].imshow(test2, cmap='gray')
-axe[1].imshow(axe0, cmap='gray')
-axe[2].imshow(axe1, cmap='gray')
-axe[3].imshow(axe2, cmap='gray')
-axe[4].imshow(axe3, cmap='gray')
-axe[5].imshow(fftImg1)
-axe[6].imshow(fftImg2)
+# axe[0].imshow(test2, cmap='gray')
+# axe[1].imshow(axe0, cmap='gray')
+# axe[2].imshow(axe1, cmap='gray')
+# axe[3].imshow(axe2, cmap='gray')
+# axe[4].imshow(axe3, cmap='gray')
+# axe[5].imshow(fftImg1)
+# axe[6].imshow(fftImg2)
+
+# axe[0].imshow(test2, cmap='gray')
+axe[0].imshow(axe0, cmap='gray')
+axe[1].imshow(axe1, cmap='gray')
+axe[2].imshow(axe2, cmap='gray')
+axe[3].imshow(axe3, cmap='gray')
+# axe[5].imshow(fftImg1)
+# axe[6].imshow(fftImg2)
 
 # axe[7].imshow(fftImg4)
 
 # io.imsave('./image/test.jpg', carrier_ifft_img)
 test = io.imread('./image/test.jpg', as_gray=True)
+plt.savefig("./image/save_test8.png")
 plt.show()

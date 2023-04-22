@@ -111,4 +111,5 @@ if __name__ == '__main__':
     axe[2].imshow(unencryptImg12, cmap='gray')
     axe[3].imshow(unencryptImg3, cmap='gray')
 
+    plt.savefig('./image/save_load_image.png')
     plt.show()
