@@ -45,6 +45,7 @@ angle = np.floor(np.angle(fft.ifft2(carrier_fft)) * 100000)
 m = carrier_ifft_img * np.cos(angle / 100000) + carrier_ifft_img * np.sin(angle / 100000) * 1j
 # carrier_fft2 = fft.fft2(test1)
 a = fft.ifft2(carrier_fft)
+d = np.abs(a)
 carrier_fft2 = fft.fft2(a)
 
 anylize = carrier_fft / carrier_fft2
