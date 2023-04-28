@@ -151,6 +151,8 @@ def train_ch3(net, train_iter, test_iter, loss, num_epochs, updater):
         test_acc = evaluate_accuracy(net, test_iter)
         animator.add(epoch+1, train_metrics + (test_acc,))
         train_loss, train_acc = train_metrics
+        # if train_loss < 0.7:
+        #     return
         # assert train_loss < 0.5, train_loss
         # assert 1 >= train_acc > 0.7, train_acc
         # assert 1 >= test_acc > 0.7, test_acc
@@ -171,3 +173,16 @@ def evaluate_accuracy(net, data_iter):
         for X, y in data_iter:
             metric.add(accuracy(net(X), y), y.numel())
     return metric[0] / metric[1]
+
+
+def predict_ch3(net, test_iter, n=6):
+    """预测标签"""
+    for X, y in test_iter:
+        break
+    trues = d2l.get_fashion_mnist_labels(y)
+    preds = d2l.get_fashion_mnist_labels(net(X).argmax(axis=1))
+    titles = [true + '\n' + pred for true, pred in zip(trues, preds)]
+    print(titles)
+    d2l.show_images(X[0:n].reshape((n, 28, 28)), 1, n, titles=titles[0:n])
+    plt.subplots_adjust(wspace=1.0)
+    plt.show()
