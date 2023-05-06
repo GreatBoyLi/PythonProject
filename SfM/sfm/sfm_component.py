@@ -1,6 +1,7 @@
 import cv2
 import numpy as np
 import config
+from mayavi import mlab
 
 
 def extract_features(image_names: list):
@@ -226,3 +227,27 @@ def bundle_adjustment(rotations, motions, K, correspond_struct_idx, key_points_f
         rotations[i] = r
     for i in range(len(correspond_struct_idx)):
         point3d_ids = correspond_struct_idx[i]
+        key_points = key_points_for_all[i]
+        r = rotations[i]
+        t = motions[i]
+        for j in range(len(point3d_ids)):
+            point3d_id = int(point3d_ids[j])
+            if point3d_id < 0:
+                continue
+            new_point = get_3dpos_v1(structure[point3d_id], key_points[j].pt, r, t, K)
+            structure[point3d_id] = new_point
+    return structure
+
+
+def get_3dpos_v1(pos, ob, r, t, K):
+    p, J = cv2.projectPoints(pos.reshape(1, 1, 3), r, t, K, np.array([]))
+    p = p.reshape(2)
+    e = ob - p
+    if abs(e[0]) > config.x or abs(e[1]) > config.y:
+        return None
+    return pos
+
+
+def fig_v1(structure):
+    mlab.points3d(structure[:, 0], structure[:, 1], structure[:, 2], mode='point', name='dinosaur')
+    mlab.show()

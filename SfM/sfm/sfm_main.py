@@ -1,3 +1,5 @@
+import math
+
 import numpy as np
 
 import config
@@ -48,5 +50,18 @@ for i in range(1, len(matches_all)):
                                       structure, nextStructure, colors, c1)
 
 structure = sfm_component.bundle_adjustment(rotations, motions, K, correspond_structIdx, keypoints_all, structure)
+
+i = 0
+# 由于bundle_adjustment的structure，会产生一些空的点（实际代表是已被删除），这里删除掉为空的点
+while i < len(structure):
+    if math.isnan((structure[i][0])):
+        structure = np.delete(structure, i, 0)
+        colors = np.delete(colors, i, 0)
+        continue
+    i += 1
+print(len(structure))
+print(len(motions))
+
+sfm_component.fig_v1(structure)
 
 print("111111")

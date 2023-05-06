@@ -32,4 +32,7 @@ Linux：新建pip.conf文件存放在 ~/.pip/pip.conf
 trusted-host=mirrors.aliyun.com
 index-url=http://mirrors.aliyun.com/pypi/simple/
 
-
+nohup  不挂起命令
+nohup python main.py &  后台运行程序
+nohup python main.py > 1.txt &  后台运行程序，且将控制台的输出重定向到1.tx文件中
+nohup python main.py > 1.txt 2 > &1 &  其中的 2 > &1 是将标准错误输出重定向到标准输出，也输出到1.txt中
