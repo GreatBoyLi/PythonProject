@@ -23,6 +23,7 @@ matches_all = sfm_component.match_all_features(descriptor_all)
 structure, correspond_structIdx, colors, rotations, motions = \
     sfm_component.init_structure(K, keypoints_all, color_all, matches_all)
 
+# 两两图片循环获得对应点的信息
 for i in range(1, len(matches_all)):
     object_points, image_points = \
         sfm_component.get_objpoints_and_imgpoints(matches_all[i], correspond_structIdx[i], structure, keypoints_all[i+1])
@@ -45,5 +46,7 @@ for i in range(1, len(matches_all)):
     correspond_structIdx[i], correspond_structIdx[i+1], structure, colors = \
         sfm_component.fusionStructure(matches_all[i], correspond_structIdx[i], correspond_structIdx[i+1],
                                       structure, nextStructure, colors, c1)
+
+structure = sfm_component.bundle_adjustment(rotations, motions, K, correspond_structIdx, keypoints_all, structure)
 
 print("111111")

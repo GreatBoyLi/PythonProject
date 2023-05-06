@@ -209,3 +209,20 @@ def fusionStructure(matches, structIndices, nextStructIndices, structure, nextSt
         structIndices[queryIdx] = nextStructIndices[trainIdx] = len(structure) - 1
     return structIndices, nextStructIndices, structure, colors
 
+
+def bundle_adjustment(rotations, motions, K, correspond_struct_idx, key_points_for_all, structure):
+    """
+    BA调整
+    :param rotations: 相机旋转
+    :param motions: 相机平移
+    :param K: 相机内参数
+    :param correspond_struct_idx: 所有对应点的下标
+    :param key_points_for_all: 所有图片的点
+    :param structure: 三维点的坐标
+    :return:
+    """
+    for i in range(len(rotations)):
+        r, _ = cv2.Rodrigues(rotations[i])
+        rotations[i] = r
+    for i in range(len(correspond_struct_idx)):
+        point3d_ids = correspond_struct_idx[i]
