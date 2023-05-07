@@ -62,6 +62,6 @@ while i < len(structure):
 print(len(structure))
 print(len(motions))
 
-sfm_component.fig_v1(structure)
+sfm_component.fig_v1(structure,colors)
 
 print("111111")

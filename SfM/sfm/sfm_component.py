@@ -2,6 +2,7 @@ import cv2
 import numpy as np
 import config
 from mayavi import mlab
+import open3d as o3d
 
 
 def extract_features(image_names: list):
@@ -248,6 +249,17 @@ def get_3dpos_v1(pos, ob, r, t, K):
     return pos
 
 
-def fig_v1(structure):
-    mlab.points3d(structure[:, 0], structure[:, 1], structure[:, 2], mode='point', name='dinosaur')
-    mlab.show()
+def fig_v1(structure, colors=None):
+    # if colors is None:
+    #     points_obj = mlab.points3d(structure[:, 0], structure[:, 1], structure[:, 2], mode='point', name='dinosaur')
+    #     mlab.show()
+    # else:
+    #     points_obj = mlab.points3d(structure[:, 0], structure[:, 1], structure[:, 2], mode='point', name='dinosaur', colormap="copper")
+    #     mlab.show()
+
+    point_cloud = o3d.geometry.PointCloud()
+    point_cloud.points = o3d.utility.Vector3dVector(structure)
+    # point_cloud.colors = o3d.utility.Vector3dVector(colors)
+    o3d.visualization.draw_geometries([point_cloud])
+
+    o3d.io.write_point_cloud("point_cloud.ply", point_cloud)
