@@ -186,3 +186,14 @@ def predict_ch3(net, test_iter, n=6):
     d2l.show_images(X[0:n].reshape((n, 28, 28)), 1, n, titles=titles[0:n])
     plt.subplots_adjust(wspace=1.0)
     plt.show()
+
+
+def evaluate_loss(net, data_iter, loss):
+    """评估给定数据集上模型扩损失"""
+    metric = Accumulator(2)
+    for X, y in data_iter:
+        out = net(X)
+        y = y.reshape(out.shape)
+        l = loss(out, y)
+        metric.add(l.sum(), l.numel())
+    return metric[0] / metric[1]
