@@ -3,6 +3,7 @@ import numpy as np
 import config
 from mayavi import mlab
 import open3d as o3d
+import exifread
 
 
 def extract_features(image_names: list):
@@ -263,3 +264,46 @@ def fig_v1(structure, colors=None):
     o3d.visualization.draw_geometries([point_cloud])
 
     o3d.io.write_point_cloud("point_cloud.ply", point_cloud)
+
+
+def get_camera_parameters(image_path, com_dict):
+    f = open(image_path, 'rb')
+    tags = exifread.process_file(f)
+    f.close()
+
+    # 获取 Exif 信息中的相机内部参数
+    focal_length = float(tags['EXIF FocalLength'].values[0].num) / tags['EXIF FocalLength'].values[0].den
+    pixel_width = float(tags['EXIF ExifImageWidth'].values[0])
+    pixel_height = float(tags['EXIF ExifImageLength'].values[0])
+
+    # 获取相机的传感器数据
+    company = str(tags['Image Make']) + ' ' + str(tags['Image Model'])
+    ccdw = 1.0
+    if company in com_dict:
+        ccdw = float(com_dict[company])
+
+    # 计算相机的内部参数矩阵
+    fx = fy = focal_length * max(pixel_width, pixel_height) / ccdw
+    cx = pixel_width / 2
+    cy = pixel_height / 2
+
+    camera_matrix = np.array([[fx, 0, cx], [0, fy, cy], [0, 0, 1]])
+
+    return camera_matrix
+
+
+import pandas as pd
+
+def get_database():
+    filename = '../other/sensor_width_camera_database.txt'
+
+    # 读取文件filename
+    df = pd.read_csv(filename)
+    # 循环遍历文件中的每一行内容
+    a = df.iloc[:, [0]].values
+    com_dict = {}
+    for x in a:
+        s = str(x[0])
+        b = s.split(';')
+        com_dict[b[0]] = b[1]
+    return com_dict
