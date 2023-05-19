@@ -1,6 +1,7 @@
 import numpy as np
 
 image_dir = '../Image/SceauxCastle'
+joy_dir = '../Image/Joy'
 
 
 def getMRT():

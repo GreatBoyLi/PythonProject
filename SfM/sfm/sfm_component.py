@@ -260,7 +260,7 @@ def fig_v1(structure, colors=None):
 
     point_cloud = o3d.geometry.PointCloud()
     point_cloud.points = o3d.utility.Vector3dVector(structure)
-    # point_cloud.colors = o3d.utility.Vector3dVector(colors)
+    point_cloud.colors = o3d.utility.Vector3dVector(colors/255)
     o3d.visualization.draw_geometries([point_cloud])
 
     o3d.io.write_point_cloud("point_cloud.ply", point_cloud)
