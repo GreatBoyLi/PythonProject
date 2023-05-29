@@ -3,6 +3,11 @@ import torchvision
 import torch.utils.data
 import matplotlib.pyplot as plt
 import d2l.torch as d2l
+import hashlib
+import os
+import tarfile
+import zipfile
+import requests
 
 num_workers = 0
 
@@ -67,6 +72,7 @@ class Accumulator:
 
 class Animator:
     """在动画中绘制数据"""
+
     def __init__(self, xlabel=None, ylabel=None, legend=None, xlim=None, ylim=None, xscale='linear',
                  yscale='linear', fmts=('-', 'm--', 'g-.', 'r:'), nrows=1, ncols=1, figsize=(3.5, 2.5)):
         # 增量地绘制多条线
@@ -74,7 +80,7 @@ class Animator:
             legend = []
         self.fig, self.axes = plt.subplots(nrows, ncols, figsize=figsize)
         if nrows * ncols == 1:
-        # 使用lambda函数捕获参数
+            # 使用lambda函数捕获参数
             self.axes = [self.axes, ]
         self.config_axes = lambda: d2l.set_axes(self.axes[0], xlabel, ylabel, xlim, ylim, xscale, yscale, legend)
         self.X, self.Y, self.fmts = None, None, fmts
@@ -90,7 +96,7 @@ class Animator:
             self.X = [[] for _ in range(n)]
         if not self.Y:
             self.Y = [[] for _ in range(n)]
-        for i, (a, b) in enumerate(zip(x,y)):
+        for i, (a, b) in enumerate(zip(x, y)):
             if a is not None and b is not None:
                 self.X[i].append(a)
                 self.Y[i].append(b)
@@ -145,12 +151,13 @@ def accuracy(y_hat, y):
 
 def train_ch3(net, train_iter, test_iter, loss, num_epochs, updater):
     """训练模型"""
-    animator = Animator(xlabel='epoch', xlim=[1, num_epochs], ylim=[0.3, 0.9], legend=['train loss', 'train acc', 'test acc'])
+    animator = Animator(xlabel='epoch', xlim=[1, num_epochs], ylim=[0.3, 0.9],
+                        legend=['train loss', 'train acc', 'test acc'])
     for epoch in range(num_epochs):
         train_metrics = train_epoch_ch3(net, train_iter, loss, updater)
         test_acc = evaluate_accuracy(net, test_iter)
-        animator.add(epoch+1, train_metrics + (test_acc,))
-        train_loss, train_acc = train_metrics
+        animator.add(epoch + 1, train_metrics + (test_acc,))
+        # train_loss, train_acc = train_metrics
         # if train_loss < 0.7:
         #     return
         # assert train_loss < 0.5, train_loss
@@ -197,3 +204,54 @@ def evaluate_loss(net, data_iter, loss):
         l = loss(out, y)
         metric.add(l.sum(), l.numel())
     return metric[0] / metric[1]
+
+
+DATA_HUB = dict()
+DATA_URL = 'http://d2l-data.s3-accelerate.amazonaws.com/'
+
+DATA_HUB['kaggle_house_train'] = (DATA_URL + 'kaggle_house_pred_train.csv', '585e9cc93e70b39160e7921475f9bcd7d31219ce')
+DATA_HUB['kaggle_house_test'] = (DATA_URL + 'kaggle_house_pred_test.csv', 'fa19780a7b011d9b009e8bff8e99922a8ee2eb90')
+
+
+def download(name, cache_dir=os.path.join('..', 'data')):
+    """下载一个DATA_HUB中的文件，返回本地文件名。"""
+    assert name in DATA_HUB, f"{name} 不存在于 {DATA_HUB}。"
+    url, sha1_hash = DATA_HUB[name]
+    os.makedirs(cache_dir, exist_ok=True)
+    fname = os.path.join(cache_dir, url.split('/')[-1])
+    if os.path.exists(fname):
+        sha1 = hashlib.sha1()
+        with open(fname, 'rb') as f:
+            while True:
+                data = f.read(1048576)
+                if not data:
+                    break
+                sha1.update(data)
+        if sha1.hexdigest() == sha1_hash:
+            return fname  # 文件已存在，无需下载。
+    print(f'正在从{url}下载{fname}...')
+    r = requests.get(url, stream=True, verify=True)
+    with open(fname, 'wb') as f:
+        f.write(r.content)
+    return fname
+
+
+def download_extract(name, folder=None):
+    """下载并解压zip/tar文件"""
+    fname = download(name)
+    base_dir = os.path.dirname(fname)
+    data_dir, ext = os.path.splitext(fname)  # ext: 扩展名. 拆分文件名和扩展名
+    if ext == '.zip':
+        fp = zipfile.ZipFile(fname, 'r')
+    elif ext in ('.tar', '.gz'):
+        fp = tarfile.open(fname, 'r')
+    else:
+        assert False, "只有zip/tar文件可以被解压缩"
+    fp.extractall(base_dir)
+    return os.path.join(base_dir, folder) if folder else data_dir
+
+
+def download_all():
+    """下载DATA_HUB中的所有文件"""
+    for name in DATA_HUB:
+        download(name)
