@@ -8,7 +8,7 @@ import time
 if __name__ == "__main__":
     # 读取图片
     chinese = FontProperties(fname='../../font/SourceHanSansSC-Normal.otf', size=13)
-    path = 'C:/Users/Great_Boy_Li/Desktop/portray.jpg'
+    path = './images/liwenpeng.jpeg'
     oriImage = io.imread(path)
     rad1 = Photo.Random(oriImage)
 
