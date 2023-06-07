@@ -4,9 +4,6 @@ from d2l import torch as d2l
 from liwp import litorch as li
 import time
 from skimage import io
-import cv2
-import numpy as np
-
 
 
 class Reshape(torch.nn.Module):
@@ -95,5 +92,4 @@ if __name__ == '__main__':
     print(f'时间一共用了{end - start}秒')
     torch.save(net.state_dict(), 'LeNet.params')
     print("*********************************************************")
-    path = 'C:/Users/Great_Boy_Li/Desktop/Images/5.jpg'
-    image = io.imread(path, as_gray=True)
+

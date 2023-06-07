@@ -31,4 +31,5 @@ while(1):
         dest = cv2.resize(picture, dsize=(28, 28)).reshape(1, 1, 28, 28)
         y = clone(torch.tensor(dest, dtype=torch.float32))
         print(y)
+        print(y.argmax(axis=1))
         print('****************************************************************')
