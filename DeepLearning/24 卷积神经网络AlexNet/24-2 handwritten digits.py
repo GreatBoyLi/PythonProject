@@ -9,7 +9,7 @@ import cv2
 import numpy as np
 
 
-data_root = "../23 卷积神经网络LeNet/data"
+data_root = "../data"
 trans = [transforms.ToTensor()]
 trans.insert(0, transforms.Resize(224))
 trans = transforms.Compose(trans)

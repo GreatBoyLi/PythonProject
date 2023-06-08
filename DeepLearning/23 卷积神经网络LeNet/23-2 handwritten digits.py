@@ -7,7 +7,7 @@ import torch
 from liwp import litorch as li
 
 
-data_root = "./data"
+data_root = "../data"
 trans = transforms.ToTensor()
 train_set = torchvision.datasets.MNIST(root=data_root, train=True, transform=trans, download=True)
 test_set = torchvision.datasets.MNIST(root=data_root, train=False, transform=trans, download=True)
