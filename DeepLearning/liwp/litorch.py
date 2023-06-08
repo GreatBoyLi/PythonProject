@@ -9,6 +9,7 @@ import tarfile
 import zipfile
 import requests
 from torch import nn
+import time
 
 num_workers = 0
 
@@ -26,6 +27,23 @@ def loadDataFashionMnist(batch_size: int, resize=None):
     trans = torchvision.transforms.Compose(trans)
     mnistTrain = torchvision.datasets.FashionMNIST(root="../data", train=True, transform=trans, download=True)
     mnistTest = torchvision.datasets.FashionMNIST(root="../data", train=False, transform=trans, download=True)
+    return (torch.utils.data.DataLoader(mnistTrain, batch_size, shuffle=True, num_workers=getDataLoaderWorkers()),
+            torch.utils.data.DataLoader(mnistTest, batch_size, shuffle=True, num_workers=getDataLoaderWorkers()))
+
+
+def loadDataMnist(batch_size: int, resize=None):
+    """
+    下载MNIST数据集，然后将其加载到内存中
+    :param batch_size: 读取批次的大小
+    :param resize: 将图像数据重新调整大小
+    :return:
+    """
+    trans = [torchvision.transforms.ToTensor()]
+    if resize:
+        trans.insert(0, torchvision.transforms.Resize(resize))
+    trans = torchvision.transforms.Compose(trans)
+    mnistTrain = torchvision.datasets.MNIST(root="../data", train=True, transform=trans, download=True)
+    mnistTest = torchvision.datasets.MNIST(root="../data", train=False, transform=trans, download=True)
     return (torch.utils.data.DataLoader(mnistTrain, batch_size, shuffle=True, num_workers=getDataLoaderWorkers()),
             torch.utils.data.DataLoader(mnistTest, batch_size, shuffle=True, num_workers=getDataLoaderWorkers()))
 
@@ -309,6 +327,7 @@ def train_ch6(net, train_iter, test_iter, num_epochs, lr, device):
     #                        legend=['train loss', 'train acc', 'test acc'])
     timer, num_batches = d2l.Timer(), len(train_iter)
     for epoch in range(num_epochs):
+        start = time.time()
         metric = Accumulator(3)
         net.train()
         for i, (X, y) in enumerate(train_iter):
@@ -327,6 +346,8 @@ def train_ch6(net, train_iter, test_iter, num_epochs, lr, device):
             # if(1 + 1) % (num_batches // 5) == 0 or i == num_batches - 1:
             #     animator.add(epoch + (i + 1) / num_batches, (train_l, train_acc, None))
         test_acc = evaluate_accuracy_gpu(net, test_iter)
+        end = time.time()
+        print(f'第{epoch}轮，花费时间为{end - start}秒。')
         # animator.add(epoch + 1, (None, None, test_acc))
     print(f'loss {train_l:.3f}, train_acc {train_acc:.3f}, test acc {test_acc:.3f}')
     print(f'{metric[2] * num_epochs / timer.sum():.1f} examples/sec on {str(device)}')
