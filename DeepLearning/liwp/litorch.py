@@ -347,7 +347,7 @@ def train_ch6(net, train_iter, test_iter, num_epochs, lr, device):
             #     animator.add(epoch + (i + 1) / num_batches, (train_l, train_acc, None))
         test_acc = evaluate_accuracy_gpu(net, test_iter)
         end = time.time()
-        print(f'第{epoch}轮，花费时间为{end - start}秒。')
+        print(f'第{epoch + 1}轮，花费时间为{end - start}秒。训练损失是{train_l},训练数据预测精度是{train_acc},测试数据预测精确度是{test_acc}。')
         # animator.add(epoch + 1, (None, None, test_acc))
     print(f'loss {train_l:.3f}, train_acc {train_acc:.3f}, test acc {test_acc:.3f}')
     print(f'{metric[2] * num_epochs / timer.sum():.1f} examples/sec on {str(device)}')

@@ -61,7 +61,8 @@ net = nn.Sequential(b1, b2, b3, b4, b5, nn.AdaptiveAvgPool2d((1, 1)), nn.Flatten
 # for layer in net:
 #     X = layer(X)
 #     print(layer.__class__.__name__, 'output shape\t', X.shape)
+print(net)
 
-lr, num_epochs, batch_size = 1, 10 ,256
-train_iter, test_iter = li.loadDataMnist(batch_size, 224)
+lr, num_epochs, batch_size = 0.05, 10, 128
+train_iter, test_iter = li.loadDataMnist(batch_size,  96)
 li.train_ch6(net, train_iter, test_iter, num_epochs, lr, li.try_gpu())
