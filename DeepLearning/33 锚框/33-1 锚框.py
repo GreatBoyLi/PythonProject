@@ -7,7 +7,9 @@ from matplotlib import pyplot as plt
 torch.set_printoptions(2)
 
 
-# 锚框的宽度和高度分别是w*s*sqrt(r)和h*s*sqrt(r)。我们只考虑组合：(s1,r1), (s2,r2), ..., (s1, rm), (s2,r1), ..., (sn,r1)
+# 锚框的宽度和高度分别是w*s*sqrt(r)和h*s*sqrt(r)。我们只考虑包含s1和r1的组合：
+# (s1,r1), (s2,r2), ..., (s1, rm), (s2,r1), (s3, r1), ..., (sn,r1)。
+# 也就是说以同一像素为中心的锚框的数量是n+m-1个。对于整个输入图像，将共生成wh(n+m-1)个。
 def multibox_prior(data, sizes, ratios):
     """生成以每个像素为中心具有不同形状的锚框"""
     in_height, in_width = data.shape[-2:]

@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 from d2l import torch as d2l
 
 
-img = d2l.plt.imread("./images/catdog.jpg")
+img = d2l.plt.imread("../images/catdog.jpg")
 d2l.plt.imshow(img)
 plt.show()
 
@@ -43,7 +43,7 @@ def bbox_to_rect(bbox, color):
                          fill=False, edgecolor=color, linewidth=2)
 
 
-fig = d2l.plt.imshow(img)
+fig = plt.imshow(img)
 fig.axes.add_patch(bbox_to_rect(dog_bbox, 'blue'))
 fig.axes.add_patch(bbox_to_rect(cat_bbox, 'red'))
 plt.show()
