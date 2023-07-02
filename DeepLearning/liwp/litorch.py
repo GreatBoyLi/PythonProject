@@ -407,7 +407,7 @@ def train_batch_ch13(net, X, y, loss, trainer, devices):
     return train_loss_sum, train_acc_sum
 
 
-def train_ch13(net, train_iter, test_iter, loss, trainer, num_epochs, devices=d2l.try_all_gpus()):
+def train_ch13(net, train_iter, test_iter, loss, trainer, num_epochs, devices=try_all_gpus()):
     timer, num_batchs = d2l.Timer(), len(train_iter)
     # 使用多GPU进行模型训练
     net = nn.DataParallel(net, device_ids=devices).to(devices[0])
@@ -756,3 +756,77 @@ def voc_label_indices(colormap, colormap2label):
     colormap = colormap.permute(1, 2, 0).numpy().astype('int32')
     idx = ((colormap[:, :, 0] * 256 + colormap[:, :, 1]) * 256 + colormap[:, :, 2])
     return colormap2label[idx]
+
+
+voc_dir = d2l.download_extract('voc2012', 'VOCdevkit/VOC2012')
+
+
+# 将所有输入的图像和标签读入内存，voc格式
+def read_voc_images(voc_dir, is_train=True):
+    """读取所有VOC图像并标注"""
+    txt_fname = os.path.join(voc_dir, 'ImageSets', 'Segmentation',
+                             'train.txt' if is_train else 'val.txt')
+    mode = torchvision.io.image.ImageReadMode.RGB
+    with open(txt_fname, 'r') as f:
+        images = f.read().split()
+    features, labels = [], []
+    for i, fname in enumerate(images):
+        features.append(torchvision.io.read_image(os.path.join(voc_dir, 'JPEGImages', f'{fname}.jpg')))
+        labels.append(torchvision.io.read_image(os.path.join(voc_dir, 'SegmentationClass', f'{fname}.png'), mode))
+    return features, labels
+
+
+def voc_rand_crop(feature, label, height, width):
+    """随机裁剪特征和标签图像"""
+    rect = torchvision.transforms.RandomCrop.get_params(feature, (height, width))
+    feature = torchvision.transforms.functional.crop(feature, *rect)
+    label = torchvision.transforms.functional.crop(label, *rect)
+    return feature, label
+
+
+class VOCSegDataset(torch.utils.data.Dataset):
+    """一个用于加载VOC数据集的自定义数据集"""
+    def __init__(self, is_train, crop_size, voc_dir):
+        self.transform = torchvision.transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+        self.crop_size = crop_size
+        features, labels = read_voc_images(voc_dir, is_train=is_train)
+        self.features = [self.normalize_image(feature) for feature in self.filter(features)]
+        self.labels = self.filter(labels)
+        self.colormap2label = voc_colormap2label()
+        print('read ' + str(len(self.features)) + ' examples')
+
+    def normalize_image(self, img):
+        return self.transform(img.float())
+
+    def filter(self, imgs):
+        return [img for img in imgs if(img.shape[1] >= self.crop_size[0] and img.shape[2] >= self.crop_size[1])]
+
+    def __getitem__(self, idx):
+        feature, label = voc_rand_crop(self.features[idx], self.labels[idx], *self.crop_size)
+        return feature, voc_label_indices(label, self.colormap2label)
+
+    def __len__(self):
+        return len(self.features)
+
+
+def load_data_voc(batch_size, crop_size):
+    """加载VOC语义分割数据集"""
+    voc_dir = d2l.download_extract('voc2012', 'VOCdevkit/VOC2012')
+    train_iter = torch.utils.data.DataLoader(VOCSegDataset(True, crop_size, voc_dir), batch_size, shuffle=True,
+                                             drop_last=True)
+    test_iter = torch.utils.data.DataLoader(VOCSegDataset(False, crop_size, voc_dir), batch_size, shuffle=True,
+                                             drop_last=True)
+    return train_iter, test_iter
+
+
+def bilinear_kernel(in_channels, out_channels, kernel_size):
+    factor = (kernel_size + 1) // 2
+    if kernel_size % 2 == 1:
+        center = factor - 1
+    else:
+        center = factor - 0.5
+    og = (torch.arange(kernel_size).reshape(-1, 1), torch.arange(kernel_size).reshape(1, -1))
+    filt = (1 - torch.abs(og[0] - center) / factor) * (1 - torch.abs(og[1] - center) / factor)
+    weight = torch.zeros((in_channels, out_channels, kernel_size, kernel_size))
+    weight[range(in_channels),range(out_channels), :, :] = filt
+    return weight
