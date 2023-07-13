@@ -3,7 +3,6 @@ import torch
 from d2l import torch as d2l
 from matplotlib import pyplot as plt
 
-
 tokens = d2l.tokenize(d2l.read_time_machine())
 corpus = [token for line in tokens for token in line]
 vocab = d2l.Vocab(corpus)
@@ -16,7 +15,7 @@ freqs = [freq for token, freq in vocab.token_freqs]
 
 # 其它的词元组合，比如二元语法、三元语法
 # 二元
-bigram_tokens = [pair for pair in zip(corpus[:-1],corpus[1:])]
+bigram_tokens = [pair for pair in zip(corpus[:-1], corpus[1:])]
 bigram_vocab = d2l.Vocab(bigram_tokens)
 # print(bigram_vocab.token_freqs[:10])
 
@@ -27,6 +26,8 @@ trigram_vocab = d2l.Vocab(trigram_tokens)
 
 bigram_freqs = [freq for token, freq in bigram_vocab.token_freqs]
 trigram_freqs = [freq for token, freq in trigram_vocab.token_freqs]
+
+
 # d2l.plot([freqs, bigram_freqs, trigram_freqs], xlabel='token: x', ylabel='frequency: n(x)', xscale='log', yscale='log',
 #          legend=['unigram', 'bigram', 'trigram'])
 # plt.show()
@@ -64,6 +65,7 @@ def seq_data_iter_sequential(corpus, batch_size, num_steps):
         Y = Ys[:, i:i + num_steps]
         yield X, Y
 
+
 my_seq = list(range(35))
 # for X, Y in seq_data_iter_random(my_seq, batch_size=2, num_steps=5):
 for X, Y in seq_data_iter_sequential(my_seq, batch_size=2, num_steps=5):
@@ -72,6 +74,7 @@ for X, Y in seq_data_iter_sequential(my_seq, batch_size=2, num_steps=5):
 
 class SeqDataLoader:
     """加载序列数据的迭代器"""
+
     def __init__(self, batch_size, num_steps, use_random_iter, max_tokens):
         if use_random_iter:
             self.data_iter_fn = seq_data_iter_random
@@ -82,4 +85,3 @@ class SeqDataLoader:
 
     def __iter__(self):
         return self.data_iter_fn(self.corpus, self.batch_size, self.num_setps)
-
