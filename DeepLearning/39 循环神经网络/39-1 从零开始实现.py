@@ -68,3 +68,17 @@ net = RNNModelScratch(len(vocab), num_hiddens, d2l.try_gpu(), get_params, init_r
 state = net.begin_state(X.shape[0], d2l.try_gpu())
 Y, new_state = net(X.to(d2l.try_gpu()), state)
 print(Y.shape, len(new_state), new_state[0].shape)
+
+
+def predict_ch8(prefix, num_preds, net, vocab, device):
+    """在prefix后面生成新字符"""
+    state = net.begin_state(batch_size=1, device=device)
+    outputs = [vocab[prefix[0]]]
+    get_input = lambda: torch.tensor([outputs[-1]], device=device).reshape((1, 1))
+    for y in prefix[1:]:  # 预热期
+        _, state = net(get_input(), state)
+        outputs.append(vocab[y])
+    for _ in range(num_preds):  # 预测num_preds步
+        y, state = net(get_input(), state)
+        outputs.append(int(y.argmax(dim=1).reshape(1)))
+    return ''.join([vocab.idx_to_token[i] for i in outputs])
