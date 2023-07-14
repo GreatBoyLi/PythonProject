@@ -11,6 +11,7 @@ import requests
 from torch import nn
 import time
 import pandas as pd
+import math
 
 num_workers = 0
 
@@ -277,7 +278,7 @@ def download_all():
         download(name)
 
 
-def try_gpu(i = 0):
+def try_gpu(i=0):
     if torch.cuda.device_count() >= i + 1:
         return torch.device(f'cuda:{i}')
     return torch.device('cpu')
@@ -319,6 +320,7 @@ def train_ch6(net, train_iter, test_iter, num_epochs, lr, device):
     def init_weights(m):
         if type(m) == nn.Linear or type(m) == nn.Conv2d:
             nn.init.xavier_uniform_(m.weight)
+
     net.apply(init_weights)
     print('train on ', device)
     net.to(device)
@@ -348,7 +350,8 @@ def train_ch6(net, train_iter, test_iter, num_epochs, lr, device):
             #     animator.add(epoch + (i + 1) / num_batches, (train_l, train_acc, None))
         test_acc = evaluate_accuracy_gpu(net, test_iter)
         end = time.time()
-        print(f'第{epoch + 1}轮，花费时间为{end - start}秒。训练损失是{train_l},训练数据预测精度是{train_acc},测试数据预测精确度是{test_acc}。')
+        print(
+            f'第{epoch + 1}轮，花费时间为{end - start}秒。训练损失是{train_l},训练数据预测精度是{train_acc},测试数据预测精确度是{test_acc}。')
         # animator.add(epoch + 1, (None, None, test_acc))
     print(f'loss {train_l:.3f}, train_acc {train_acc:.3f}, test acc {test_acc:.3f}')
     print(f'{metric[2] * num_epochs / timer.sum():.1f} examples/sec on {str(device)}')
@@ -363,6 +366,7 @@ def resnet18(num_classes, in_channels=1):
     """A slightly modified ResNet-18 model.
 
     Defined in :numref:`sec_multi_gpu_concise`"""
+
     def resnet_block(in_channels, out_channels, num_residuals,
                      first_block=False):
         blk = []
@@ -384,7 +388,7 @@ def resnet18(num_classes, in_channels=1):
     net.add_module("resnet_block2", resnet_block(64, 128, 2))
     net.add_module("resnet_block3", resnet_block(128, 256, 2))
     net.add_module("resnet_block4", resnet_block(256, 512, 2))
-    net.add_module("global_avg_pool", nn.AdaptiveAvgPool2d((1,1)))
+    net.add_module("global_avg_pool", nn.AdaptiveAvgPool2d((1, 1)))
     net.add_module("fc", nn.Sequential(nn.Flatten(),
                                        nn.Linear(512, num_classes)))
     return net
@@ -473,8 +477,8 @@ def multibox_prior(data, sizes, ratios):
 
     # 为了将锚点移动到像素的中心，需要设置偏移量，因为一个像素的高为1且宽为1，我们选择偏移我们的中心0.5
     offset_h, offset_w = 0.5, 0.5
-    steps_h = 1.0 / in_height   # 在y轴上缩放步长
-    steps_w = 1.0 / in_width    # 在x轴上缩放步长
+    steps_h = 1.0 / in_height  # 在y轴上缩放步长
+    steps_w = 1.0 / in_width  # 在x轴上缩放步长
 
     # 生成锚框的所有中心点
     center_h = (torch.arange(in_height, device=device) + offset_h) * steps_h
@@ -501,6 +505,7 @@ def multibox_prior(data, sizes, ratios):
 
 def show_bboxes(axes, bboxes, labels=None, colors=None):
     """显示所有边界框"""
+
     def _make_list(obj, default_values=None):
         if obj is None:
             obj = default_values
@@ -617,7 +622,7 @@ def offset_inverse(anchors, offset_preds):
 def nms(boxes, scores, iou_threshold):
     """对预测边界框的置信度进行排序"""
     B = torch.argsort(scores, dim=-1, descending=True)
-    keep = []   # 保留预测边界框的指标
+    keep = []  # 保留预测边界框的指标
     while B.numel() > 0:
         i = B[0]
         keep.append(i)
@@ -688,6 +693,7 @@ def read_data_bananas(is_train=True):
 
 class BananasSet(torch.utils.data.Dataset):
     """一个用于加载香蕉检测数据集的自定义数据集"""
+
     def __init__(self, is_train):
         self.features, self.labels = read_data_bananas(is_train)
         print('read ' + str(len(self.features)) + (f' training examples' if is_train else f' validation examples'))
@@ -786,6 +792,7 @@ def voc_rand_crop(feature, label, height, width):
 
 class VOCSegDataset(torch.utils.data.Dataset):
     """一个用于加载VOC数据集的自定义数据集"""
+
     def __init__(self, is_train, crop_size, voc_dir):
         self.transform = torchvision.transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
         self.crop_size = crop_size
@@ -799,7 +806,7 @@ class VOCSegDataset(torch.utils.data.Dataset):
         return self.transform(img.float())
 
     def filter(self, imgs):
-        return [img for img in imgs if(img.shape[1] >= self.crop_size[0] and img.shape[2] >= self.crop_size[1])]
+        return [img for img in imgs if (img.shape[1] >= self.crop_size[0] and img.shape[2] >= self.crop_size[1])]
 
     def __getitem__(self, idx):
         feature, label = voc_rand_crop(self.features[idx], self.labels[idx], *self.crop_size)
@@ -815,7 +822,7 @@ def load_data_voc(batch_size, crop_size):
     train_iter = torch.utils.data.DataLoader(VOCSegDataset(True, crop_size, voc_dir), batch_size, shuffle=True,
                                              drop_last=True)
     test_iter = torch.utils.data.DataLoader(VOCSegDataset(False, crop_size, voc_dir), batch_size, shuffle=True,
-                                             drop_last=True)
+                                            drop_last=True)
     return train_iter, test_iter
 
 
@@ -828,5 +835,85 @@ def bilinear_kernel(in_channels, out_channels, kernel_size):
     og = (torch.arange(kernel_size).reshape(-1, 1), torch.arange(kernel_size).reshape(1, -1))
     filt = (1 - torch.abs(og[0] - center) / factor) * (1 - torch.abs(og[1] - center) / factor)
     weight = torch.zeros((in_channels, out_channels, kernel_size, kernel_size))
-    weight[range(in_channels),range(out_channels), :, :] = filt
+    weight[range(in_channels), range(out_channels), :, :] = filt
     return weight
+
+
+def predict_ch8(prefix, num_preds, net, vocab, device):
+    """在prefix后面生成新字符"""
+    state = net.begin_state(batch_size=1, device=device)
+    outputs = [vocab[prefix[0]]]
+    get_input = lambda: torch.tensor([outputs[-1]], device=device).reshape((1, 1))
+    for y in prefix[1:]:  # 预热期
+        _, state = net(get_input(), state)
+        outputs.append(vocab[y])
+    for _ in range(num_preds):  # 预测num_preds步
+        y, state = net(get_input(), state)
+        outputs.append(int(y.argmax(dim=1).reshape(1)))
+    return ''.join([vocab.idx_to_token[i] for i in outputs])
+
+
+def grad_clipping(net, theta):
+    """梯度裁剪"""
+    if isinstance(net, nn.Module):
+        params = [p for p in net.parameters() if p.requires_grad]
+    else:
+        params = net.params
+    norm = torch.sqrt(sum(torch.sum((p.grad ** 2)) for p in params))
+    if norm > theta:
+        for param in params:
+            param.grad[:] *= theta / norm
+
+
+def train_epoch_ch8(net, train_iter, loss, updater, device, use_random_iter):
+    """训练网络一个迭代同期"""
+    state, timer = None, d2l.Timer()
+    metric = d2l.Accumulator(2)  # 训练损失之和，词元数量
+    for X, Y in train_iter:
+        if state is None or use_random_iter:
+            # 在第一次迭代或使用随机抽样时初始化state
+            state = net.begin_state(batch_size=X.shape[0], device=device)
+        else:
+            if isinstance(net, nn.Module) and not isinstance(state, tuple):
+                # state对于nn.GRU是个张量
+                state.detach_()
+            else:
+                # state对于nn.LSTM或对于我们从零开始实现的模型是个张量
+                for s in state:
+                    s.detach_()
+        y = Y.T.reshape(-1)
+        X, y = X.to(device), y.to(device)
+        y_hat, state = net(X, state)
+        l = loss(y_hat, y.long()).mean()
+        if isinstance(updater, torch.optim.Optimizer):
+            updater.zero_grad()
+            l.backward()
+            grad_clipping(net, 1)
+            updater.step()
+        else:
+            l.backward()
+            grad_clipping(net, 1)
+            # 因为已经调用了mean函数
+            updater(batch_size=1)
+        metric.add(l * y.numel(), y.numel())
+    # 困惑度，就是把正常打印的那个loss，算个exp出来
+    return math.exp(metric[0] / metric[1]), metric[1] / timer.stop()
+
+
+def train_ch8(net, train_iter, vocab, lr, num_epochs, device, use_random_iter=False):
+    """训练模型"""
+    loss = nn.CrossEntropyLoss()
+    animator = Animator(xlabel='epoch', ylabel='perplexity', legend=['train'], xlim=[10, num_epochs])
+    # 初始化
+    if isinstance(net, nn.Module):
+        updater = torch.optim.SGD(net.parameters(), lr)
+    else:
+        updater = lambda batch_size: d2l.sgd(net.params, lr, batch_size)
+    predict = lambda prefix: predict_ch8(prefix, 50, net, vocab, device)
+    # 训练和预测
+    for epoch in range(num_epochs):
+        ppl, speed = train_epoch_ch8(net, train_iter, loss, updater, device, use_random_iter)
+        if (epoch + 1) % 10 == 0:
+            print(predict('time traveller'))
+            animator.add(epoch + 1, [ppl])
+    print(f'困惑度 {ppl:.1f}, {speed:.1f} 词元/秒 {str(device)}')
