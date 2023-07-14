@@ -3,11 +3,16 @@ import torch
 from torch import nn
 from torch.nn import functional as F
 from d2l import torch as d2l
+from liwp import litorch as li
 
 batch_size, num_steps = 32, 35
+
+# 每个单词映射成数字，train_iter中X和Y的形状是batch_size * num_steps
 train_iter, vocab = d2l.load_data_time_machine(batch_size, num_steps)
-X = torch.arange(10).reshape((2, 5))
-print(F.one_hot(X.T, 28).shape)
+
+
+# X = torch.arange(10).reshape((2, 5))
+# print(F.one_hot(X.T, 28).shape)
 
 
 def get_params(vocab_size, num_hiddens, device):
@@ -65,9 +70,11 @@ class RNNModelScratch:
 
 num_hiddens = 512
 net = RNNModelScratch(len(vocab), num_hiddens, d2l.try_gpu(), get_params, init_rnn_state, rnn)
-state = net.begin_state(X.shape[0], d2l.try_gpu())
-Y, new_state = net(X.to(d2l.try_gpu()), state)
-print(Y.shape, len(new_state), new_state[0].shape)
+
+
+# state = net.begin_state(X.shape[0], d2l.try_gpu())
+# Y, new_state = net(X.to(d2l.try_gpu()), state)
+# print(Y.shape, len(new_state), new_state[0].shape)
 
 
 def predict_ch8(prefix, num_preds, net, vocab, device):
@@ -82,3 +89,79 @@ def predict_ch8(prefix, num_preds, net, vocab, device):
         y, state = net(get_input(), state)
         outputs.append(int(y.argmax(dim=1).reshape(1)))
     return ''.join([vocab.idx_to_token[i] for i in outputs])
+
+
+# print(predict_ch8('time traveller ', 10, net, vocab, d2l.try_gpu()))
+
+
+def grad_clipping(net, theta):
+    """梯度裁剪"""
+    if isinstance(net, nn.Module):
+        params = [p for p in net.parameters() if p.requires_grad]
+    else:
+        params = net.params
+    norm = torch.sqrt(sum(torch.sum((p.grad ** 2)) for p in params))
+    if norm > theta:
+        for param in params:
+            param.grad[:] *= theta / norm
+
+
+def train_epoch_ch8(net, train_iter, loss, updater, device, use_random_iter):
+    """训练网络一个迭代同期"""
+    state, timer = None, d2l.Timer()
+    metric = d2l.Accumulator(2)  # 训练损失之和，词元数量
+    for X, Y in train_iter:
+        if state is None or use_random_iter:
+            # 在第一次迭代或使用随机抽样时初始化state
+            state = net.begin_state(batch_size=X.shape[0], device=device)
+        else:
+            if isinstance(net, nn.Module) and not isinstance(state, tuple):
+                # state对于nn.GRU是个张量
+                state.detach_()
+            else:
+                # state对于nn.LSTM或对于我们从零开始实现的模型是个张量
+                for s in state:
+                    s.detach_()
+        y = Y.T.reshape(-1)
+        X, y = X.to(device), y.to(device)
+        y_hat, state = net(X, state)
+        l = loss(y_hat, y.long()).mean()
+        if isinstance(updater, torch.optim.Optimizer):
+            updater.zero_grad()
+            l.backward()
+            grad_clipping(net, 1)
+            updater.step()
+        else:
+            l.backward()
+            grad_clipping(net, 1)
+            # 因为已经调用了mean函数
+            updater(batch_size=1)
+        metric.add(l * y.numel(), y.numel())
+    # 困惑度，就是把正常打印的那个loss，算个exp出来
+    return math.exp(metric[0] / metric[1]), metric[1] / timer.stop()
+
+
+def train_ch8(net, train_iter, vocab, lr, num_epochs, device, use_random_iter=False):
+    """训练模型"""
+    loss = nn.CrossEntropyLoss()
+    animator = li.Animator(xlabel='epoch', ylabel='perplexity', legend=['train'], xlim=[10, num_epochs])
+    # 初始化
+    if isinstance(net, nn.Module):
+        updater = torch.optim.SGD(net.parameters(), lr)
+    else:
+        updater = lambda batch_size: d2l.sgd(net.params, lr, batch_size)
+    predict = lambda prefix: predict_ch8(prefix, 50, net, vocab, device)
+    # 训练和预测
+    for epoch in range(num_epochs):
+        ppl, speed = train_epoch_ch8(net, train_iter, loss, updater, device, use_random_iter)
+        if (epoch + 1) % 10 == 0:
+            print(predict('time traveller'))
+            animator.add(epoch + 1, [ppl])
+    print(f'困惑度 {ppl:.1f}, {speed:.1f} 词元/秒 {str(device)}')
+    print(predict('time traveller'))
+    print(predict('traveller'))
+    print(predict('time'))
+
+
+num_epochs, lr = 500, 1
+train_ch8(net, train_iter, vocab, lr, num_epochs, d2l.try_gpu(), use_random_iter=True)
