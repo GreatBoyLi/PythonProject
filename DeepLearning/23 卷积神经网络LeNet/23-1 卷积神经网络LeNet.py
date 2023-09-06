@@ -3,7 +3,7 @@ from torch import nn
 from d2l import torch as d2l
 from liwp import litorch as li
 import time
-from skimage import io
+# from skimage import io
 
 
 class Reshape(torch.nn.Module):

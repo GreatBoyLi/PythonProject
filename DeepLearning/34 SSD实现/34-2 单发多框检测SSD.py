@@ -164,7 +164,7 @@ cls_loss = nn.CrossEntropyLoss(reduction='none')
 bbox_loss = nn.L1Loss(reduction='none')
 
 num_epochs, timer = 20, d2l.Timer()
-animator = li.Animator(xlabel='epoch', xlim=[1, num_epochs], legend=['class error', 'bbox mae'])
+# animator = li.Animator(xlabel='epoch', xlim=[1, num_epochs], legend=['class error', 'bbox mae'])
 
 net = net.to(device)
 for epoch in range(num_epochs):
@@ -186,7 +186,7 @@ for epoch in range(num_epochs):
         trainer.step()
         metric.add(cls_eval(cls_preds, cls_labels), cls_labels.numel(), bbox_eval(bbox_preds, bbox_labels, bbox_masks), bbox_labels.numel())
     cls_err, bbox_mae = 1 - metric[0] / metric[1], metric[2] / metric[3]
-    animator.add(epoch + 1, (cls_err, bbox_mae))
+    # animator.add(epoch + 1, (cls_err, bbox_mae))
     print(f'类别预测的错误率：{cls_err}，锚框的平均绝对误差：{bbox_mae}')
 print(f'class err {cls_err:.2e}, bbox mae {bbox_mae:.2e}')
 print(f'{len(train_iter.dataset) / timer.stop():.1f} examples/sec on {str(device)}')

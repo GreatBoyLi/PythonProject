@@ -903,7 +903,7 @@ def train_epoch_ch8(net, train_iter, loss, updater, device, use_random_iter):
 def train_ch8(net, train_iter, vocab, lr, num_epochs, device, use_random_iter=False):
     """训练模型"""
     loss = nn.CrossEntropyLoss()
-    animator = Animator(xlabel='epoch', ylabel='perplexity', legend=['train'], xlim=[10, num_epochs])
+    # animator = Animator(xlabel='epoch', ylabel='perplexity', legend=['train'], xlim=[10, num_epochs])
     # 初始化
     if isinstance(net, nn.Module):
         updater = torch.optim.SGD(net.parameters(), lr)
@@ -915,5 +915,5 @@ def train_ch8(net, train_iter, vocab, lr, num_epochs, device, use_random_iter=Fa
         ppl, speed = train_epoch_ch8(net, train_iter, loss, updater, device, use_random_iter)
         if (epoch + 1) % 10 == 0:
             print(predict('time traveller'))
-            animator.add(epoch + 1, [ppl])
+            # animator.add(epoch + 1, [ppl])
     print(f'困惑度 {ppl:.1f}, {speed:.1f} 词元/秒 {str(device)}')
